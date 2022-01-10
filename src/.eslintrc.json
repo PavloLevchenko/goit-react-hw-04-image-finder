@@ -1,10 +1,20 @@
 {
-    "no-use-before-define": [
-        "error",
-        {
-            "functions": true,
-            "classes": false,
-            "variables": true
-        }
-    ]
+    "rules": {
+        "no-use-before-define": [
+            "error",
+            {
+                "functions": true,
+                "classes": false,
+                "variables": true
+            }
+        ],
+        "@typescript-eslint/no-use-before-define": [
+            "error",
+            {
+                "functions": true,
+                "classes": false,
+                "variables": true
+            }
+        ]
+    }
 }
