@@ -33,6 +33,7 @@ class App extends Component {
   };
   componentDidUpdate(prevProps, prevState) {
     const { work, text, page } = this.state;
+
     if (work === App.status.pending) {
       getImages(text, page, App.itemOnPage, this.onResponse, this.onError);
     }
@@ -51,7 +52,7 @@ class App extends Component {
     this.setState({ images: loaded, pages: totalPages, work: App.status.resolved });
   };
   onError = msg => {
-    this.setState({ error: msg, work: App.status.rejected });
+    this.setState({ page: 1, pages: 1, error: msg, work: App.status.rejected });
   };
   loadMore = () => {
     const { page, pages } = this.state;
@@ -63,12 +64,14 @@ class App extends Component {
   };
   render() {
     const { work, text, images, pages } = this.state;
+    if (work === App.status.rejected) {
+      toast(`${text} not found`);
+    }
     return (
       <div className="App">
         <Searchbar onSubmit={this.changeSearchText} />
         {work === App.status.resolved && <ImageGallery images={images} />}
         {pages > 1 && <Button onClick={this.loadMore}>Load more</Button>}
-        {work === App.status.rejected && toast(`${text} not found`)}
         {work === App.status.pending && (
           <Modal>
             <Loader />

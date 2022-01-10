@@ -20,14 +20,18 @@ class Modal extends Component {
   }
 
   escapeModal = event => {
-    if (this.props.toggleModal && event.key === 'Escape') {
-      this.props.toggleModal();
+    const { toggleModal } = this.props;
+    const { key } = event;
+    if (toggleModal && key === 'Escape') {
+      toggleModal();
     }
   };
 
   closeModal = event => {
-    if (this.props.toggleModal && event.target === event.currentTarget) {
-      this.props.toggleModal();
+    const { toggleModal } = this.props;
+    const { target, currentTarget } = event;
+    if (toggleModal && target === currentTarget) {
+      toggleModal();
     }
   };
 

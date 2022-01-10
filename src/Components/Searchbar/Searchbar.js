@@ -7,11 +7,9 @@ class Searchbar extends Component {
     onSubmit: PropTypes.func.isRequired,
   };
   state = {
-    searchQuery: 'forest',
+    searchQuery: '',
   };
   handleInputChange = event => {
-    event.preventDefault();
-
     const { value, name } = event.currentTarget;
     this.setState({
       [name]: value,
@@ -19,11 +17,12 @@ class Searchbar extends Component {
   };
   render() {
     const { onSubmit } = this.props;
+    const { searchQuery } = this.state;
     return (
       <header
         onSubmit={event => {
           event.preventDefault();
-          onSubmit(this.state.searchQuery);
+          onSubmit(searchQuery);
         }}
         className={s.Searchbar}
       >

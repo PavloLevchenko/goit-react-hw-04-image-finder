@@ -17,12 +17,13 @@ export default async function getImages(text, page = 1, limit = 12, onLoad, onFa
   };
   try {
     const response = await axios.get(FETCH_URL, { params });
-    if (response.data.totalHits !== 0) {
-      let totalPages = Math.trunc(response.data.totalHits / limit);
-      if (response.data.totalHits % limit !== 0) {
+    const { totalHits, hits } = response.data;
+    if (totalHits !== 0) {
+      let totalPages = Math.trunc(totalHits / limit);
+      if (totalHits % limit !== 0) {
         totalPages += 1;
       }
-      onLoad(response.data.hits, totalPages);
+      onLoad(hits, totalPages);
     } else {
       onFailture('Sorry, there are no images matching your search query. Please try again.');
     }

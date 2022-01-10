@@ -19,6 +19,7 @@ class ImageGalleryItem extends Component {
   };
   render() {
     const { largeImageURL, previewURL, tags } = this.props;
+    const { showModal } = this.state;
     return (
       <li className={s.ImageGalleryItem}>
         <img
@@ -27,7 +28,7 @@ class ImageGalleryItem extends Component {
           className={s.ImageGalleryItemImage}
           onClick={this.toggleModal}
         />
-        {this.state.showModal && (
+        {showModal && (
           <Modal toggleModal={this.toggleModal} showCloseBtn={true}>
             <img className={s.ImageGalleryFullItemImage} src={largeImageURL} alt={tags} />
           </Modal>
