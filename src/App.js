@@ -19,6 +19,7 @@ class App extends Component {
     error: '',
   };
   static itemOnPage = 12;
+  static maximumHits = 500;
   static status = {
     idle: 'idle',
     pending: 'pending',
@@ -26,10 +27,12 @@ class App extends Component {
     rejected: 'rejected',
   };
   changeSearchText = text => {
-    this.setState({
-      text: text.toLowerCase(),
-      work: App.status.pending,
-    });
+    if (text) {
+      this.setState({
+        text: text.toLowerCase(),
+        work: App.status.pending,
+      });
+    }
   };
   componentDidUpdate(prevProps, prevState) {
     const { work, text, page } = this.state;
@@ -44,7 +47,14 @@ class App extends Component {
       });
     }
   }
-  onResponse = (images, totalPages) => {
+  onResponse = (images, totalHits, totalPages) => {
+    if (this.state.page == 1 && totalHits) {
+      if (totalHits >= App.maximumHits) {
+        toast(`Found more than ${totalHits} images`);
+      } else {
+        toast(`Found ${totalHits} images`);
+      }
+    }
     const loaded = images.map(({ id, largeImageURL, previewURL, tags }) => {
       return { id, largeImageURL, previewURL, tags };
     });

@@ -23,7 +23,7 @@ export default async function getImages(text, page = 1, limit = 12, onLoad, onFa
       if (totalHits % limit !== 0) {
         totalPages += 1;
       }
-      onLoad(hits, totalPages);
+      onLoad(hits, totalHits, totalPages);
     } else {
       onFailture('Sorry, there are no images matching your search query. Please try again.');
     }
