@@ -48,7 +48,7 @@ class App extends Component {
     }
   }
   onResponse = (images, totalHits, totalPages) => {
-    if (this.state.page == 1 && totalHits) {
+    if (this.state.page === '1' && totalHits) {
       if (totalHits >= App.maximumHits) {
         toast(`Found more than ${totalHits} images`);
       } else {
