@@ -45,8 +45,7 @@ class App extends Component {
     }
   }
   onResponse = (images, totalPages) => {
-    const loaded = images.map(image => {
-      const { id, largeImageURL, previewURL, tags } = image;
+    const loaded = images.map(({ id, largeImageURL, previewURL, tags }) => {
       return { id, largeImageURL, previewURL, tags };
     });
     this.setState({ images: loaded, pages: totalPages, work: App.status.resolved });
