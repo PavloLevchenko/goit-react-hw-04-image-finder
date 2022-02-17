@@ -19,17 +19,19 @@ class Modal extends Component {
     window.removeEventListener('keydown', this.escapeModal);
   }
 
-  escapeModal = ({ key }) => {
+  escapeModal = event => {
+    const { key } = event;
     const { toggleModal } = this.props;
     if (toggleModal && key === 'Escape') {
-      toggleModal();
+      toggleModal(event);
     }
   };
 
-  closeModal = ({ target, currentTarget }) => {
+  closeModal = event => {
+    const { target, currentTarget } = event;
     const { toggleModal } = this.props;
     if (toggleModal && target === currentTarget) {
-      toggleModal();
+      toggleModal(event);
     }
   };
 

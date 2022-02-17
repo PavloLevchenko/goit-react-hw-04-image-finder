@@ -4,15 +4,8 @@ import ImageGalleryItem from 'Components/ImageGalleryItem';
 
 const ImageGallery = ({ images }) => (
   <ul className={s.ImageGallery}>
-    {images.map(({ id, largeImageURL, previewURL, tags }) => {
-      return (
-        <ImageGalleryItem
-          key={id}
-          largeImageURL={largeImageURL}
-          previewURL={previewURL}
-          tags={tags}
-        />
-      );
+    {images.map(({ id, previewURL, tags }) => {
+      return <ImageGalleryItem key={id} id={id} previewURL={previewURL} tags={tags} />;
     })}
   </ul>
 );
