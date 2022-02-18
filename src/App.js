@@ -36,6 +36,7 @@ class App extends Component {
         images: [],
         text: text.toLowerCase(),
         work: App.status.pending,
+        page: 1,
       });
     }
   };
