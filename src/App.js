@@ -1,5 +1,5 @@
 import './App.css';
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import getImages from 'Api/getImages';
 import Searchbar from 'Components/Searchbar';
 import ImageGallery from 'Components/ImageGallery';
@@ -10,127 +10,114 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import s from 'Components/ImageGalleryItem/ImageGalleryItem.module.css';
 
-class App extends Component {
-  state = {
-    currentImage: null,
-    text: '',
-    images: [],
-    page: 1,
-    pages: 0,
-    offset: 0,
-    work: App.status.idle,
-    error: '',
-  };
-  static itemOnPage = 12;
-  static maximumHits = 500;
-  static status = {
-    idle: 'idle',
-    pending: 'pending',
-    resolved: 'resolved',
-    rejected: 'rejected',
-    modal: 'modal',
-  };
-  changeSearchText = text => {
-    if (this.state.text !== text) {
-      this.setState({
-        images: [],
-        text: text.toLowerCase(),
-        work: App.status.pending,
-        page: 1,
-      });
-    }
-  };
-  componentDidUpdate(prevProps, prevState) {
-    const { work, text, page } = this.state;
+const status = {
+  idle: 'idle',
+  pending: 'pending',
+  resolved: 'resolved',
+  rejected: 'rejected',
+  modal: 'modal',
+};
 
-    if (work === App.status.pending) {
-      getImages(text, page, App.itemOnPage, this.onResponse, this.onError);
+const itemOnPage = 12;
+const maximumHits = 500;
+
+const App = () => {
+  const [text, setText] = useState('');
+  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(0);
+  const [pages, setPages] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [work, setWork] = useState('');
+
+  const changeSearchText = query => {
+    if (text !== query) {
+      setImages([]);
+      setText(query.toLowerCase());
+      setWork(status.pending);
+      setPage(1);
     }
-    if (work === App.status.resolved) {
+  };
+
+  useEffect(() => {
+    if (work === status.pending) {
+      getImages(text, page, itemOnPage, onResponse, onError);
+    }
+    if (work === status.resolved) {
       window.scrollTo({
-        top: this.state.offset,
+        top: offset,
       });
     }
-  }
-  onResponse = (images, totalHits, totalPages) => {
-    if (this.state.page === 1 && totalHits) {
-      if (totalHits >= App.maximumHits) {
+  }, [work]);
+
+  const onResponse = (data, totalHits, totalPages) => {
+    if (page === 1 && totalHits) {
+      if (totalHits >= maximumHits) {
         toast(`Found more than ${totalHits} images`);
       } else {
         toast(`Found ${totalHits} images`);
       }
     }
-    const loaded = images.map(({ id, largeImageURL, previewURL, tags }) => {
+    const loaded = data.map(({ id, largeImageURL, previewURL, tags }) => {
       return { id, largeImageURL, previewURL, tags };
     });
 
-    this.setState(state => {
-      return {
-        images: [...state.images, ...loaded],
-        pages: totalPages,
-        work: App.status.resolved,
-      };
-    });
+    setImages([...images, ...loaded]);
+    setWork(status.resolved);
+    setPages(totalPages);
   };
-  onError = msg => {
-    this.setState({ page: 1, pages: 1, error: msg, work: App.status.rejected });
-  };
-  loadMore = () => {
-    const { page, pages } = this.state;
-    const nextPage = pages > page ? page + 1 : 1;
-    this.setState({
-      page: nextPage,
-      work: App.status.pending,
-      offset: window.scrollY,
-    });
-  };
-  openModal = event => {
-    const id = Number(event.target.dataset.id);
-    const images = this.state.images;
-    if (id) {
-      this.setState({
-        currentImage: images.filter(image => {
-          return image.id === id;
-        })[0],
-        work: App.status.modal,
-        offset: window.scrollY,
-      });
-    }
-  };
-  closeModal = () => {
-    this.setState({
-      work: App.status.resolved,
-    });
-  };
-  render() {
-    const { work, text, images, page, pages, currentImage } = this.state;
 
-    if (work === App.status.rejected) {
-      toast(`${text} not found`);
+  const onError = msg => {
+    setWork(status.rejected);
+    setPage(1);
+    setPages(1);
+  };
+
+  const loadMore = () => {
+    const nextPage = pages > page ? page + 1 : 1;
+    setPage(nextPage);
+    setWork(status.pending);
+    setOffset(window.scrollY);
+  };
+
+  const openModal = event => {
+    const id = Number(event.target.dataset.id);
+    if (id) {
+      const image = images.filter(image => {
+        return image.id === id;
+      })[0];
+      setImage(image);
+      setWork(status.modal);
+      setOffset(window.scrollY);
     }
-    return (
-      <div className="App" onClick={this.openModal}>
-        <Searchbar onSubmit={this.changeSearchText} />
-        {work === App.status.resolved && <ImageGallery images={images} />}
-        {pages > 1 && page < pages && <Button onClick={this.loadMore}>Load more</Button>}
-        {work === App.status.pending && (
-          <Modal>
-            <Loader />
-          </Modal>
-        )}
-        {work === App.status.modal && (
-          <Modal toggleModal={this.closeModal} showCloseBtn={true}>
-            <img
-              className={s.ImageGalleryFullItemImage}
-              src={currentImage.largeImageURL}
-              alt={currentImage.tags}
-            />
-          </Modal>
-        )}
-        <ToastContainer />
-      </div>
-    );
+  };
+
+  const closeModal = () => {
+    setWork(status.resolved);
+  };
+
+  if (work === status.rejected) {
+    toast(`${text} not found`);
   }
-}
+
+  return (
+    <div className="App" onClick={openModal}>
+      <Searchbar onSubmit={changeSearchText} />
+      {work === status.resolved && <ImageGallery images={images} />}
+      {pages > 1 && page < pages && <Button onClick={loadMore}>Load more</Button>}
+      {work === status.pending && (
+        <Modal>
+          <Loader />
+        </Modal>
+      )}
+      {work === status.modal && (
+        <Modal toggleModal={closeModal} showCloseBtn={true}>
+          <img className={s.ImageGalleryFullItemImage} src={image.largeImageURL} alt={image.tags} />
+        </Modal>
+      )}
+      <ToastContainer />
+    </div>
+  );
+};
 
 export default App;
