@@ -64,7 +64,6 @@ const App = () => {
 
   useEffect(() => {
     if (view === status.loaded) {
-      console.log(offset);
       window.scrollTo({
         top: offset,
       });
