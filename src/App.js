@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import getImages from 'Api/getImages';
 import Searchbar from 'Components/Searchbar';
 import ImageGallery from 'Components/ImageGallery';
@@ -25,8 +25,8 @@ const App = () => {
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
   const [images, setImages] = useState([]);
-  const [page, setPage] = useState(0);
-  const [pages, setPages] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [offset, setOffset] = useState(0);
   const [work, setWork] = useState('');
 
@@ -39,6 +39,26 @@ const App = () => {
     }
   };
 
+  const onResponse = useCallback(
+    (data, totalHits, totalPages) => {
+      if (page === 1 && totalHits) {
+        if (totalHits >= maximumHits) {
+          toast(`Found more than ${totalHits} images`);
+        } else {
+          toast(`Found ${totalHits} images`);
+        }
+      }
+      const loaded = data.map(({ id, largeImageURL, previewURL, tags }) => {
+        return { id, largeImageURL, previewURL, tags };
+      });
+
+      setImages([...images, ...loaded]);
+      setWork(status.resolved);
+      setPages(totalPages);
+    },
+    [images, page],
+  );
+
   useEffect(() => {
     if (work === status.pending) {
       getImages(text, page, itemOnPage, onResponse, onError);
@@ -48,24 +68,7 @@ const App = () => {
         top: offset,
       });
     }
-  }, [work]);
-
-  const onResponse = (data, totalHits, totalPages) => {
-    if (page === 1 && totalHits) {
-      if (totalHits >= maximumHits) {
-        toast(`Found more than ${totalHits} images`);
-      } else {
-        toast(`Found ${totalHits} images`);
-      }
-    }
-    const loaded = data.map(({ id, largeImageURL, previewURL, tags }) => {
-      return { id, largeImageURL, previewURL, tags };
-    });
-
-    setImages([...images, ...loaded]);
-    setWork(status.resolved);
-    setPages(totalPages);
-  };
+  }, [offset, onResponse, page, text, work]);
 
   const onError = msg => {
     setWork(status.rejected);
@@ -98,6 +101,8 @@ const App = () => {
 
   if (work === status.rejected) {
     toast(`${text} not found`);
+    setText('');
+    setWork(status.idle);
   }
 
   return (

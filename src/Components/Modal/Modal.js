@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import s from './Modal.module.css';
@@ -6,12 +6,15 @@ import s from './Modal.module.css';
 const modalRoot = document.getElementById('modal-root');
 
 const Modal = ({ children, toggleModal, showCloseBtn }) => {
-  const escapeModal = event => {
-    const { key } = event;
-    if (toggleModal && key === 'Escape') {
-      toggleModal(event);
-    }
-  };
+  const escapeModal = useCallback(
+    event => {
+      const { key } = event;
+      if (toggleModal && key === 'Escape') {
+        toggleModal(event);
+      }
+    },
+    [toggleModal],
+  );
 
   useEffect(() => {
     if (toggleModal) {
@@ -20,7 +23,7 @@ const Modal = ({ children, toggleModal, showCloseBtn }) => {
         window.removeEventListener('keydown', escapeModal);
       };
     }
-  }, [toggleModal]);
+  }, [toggleModal, escapeModal]);
 
   const closeModal = event => {
     const { target, currentTarget } = event;
