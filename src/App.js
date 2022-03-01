@@ -14,94 +14,100 @@ const status = {
   idle: 'idle',
   pending: 'pending',
   loaded: 'loaded',
-  modal: 'modal',
 };
 
 const itemOnPage = 12;
 const maximumHits = 500;
 
+function useApi(text, page) {
+  const [images, setImages] = useState([]);
+  const [pages, setPages] = useState(0);
+  const [view, setView] = useState(status.idle);
+
+  useEffect(() => {
+    const onResponse = (data, totalHits, totalPages) => {
+      if (page === 1 && totalHits) {
+        if (totalHits >= maximumHits) {
+          toast(`Found more than ${totalHits} images`);
+        } else {
+          toast(`Found ${totalHits} images`);
+        }
+      }
+      const loaded = data.map(({ id, largeImageURL, previewURL, tags }) => {
+        return { id, largeImageURL, previewURL, tags };
+      });
+      setPages(totalPages);
+      setView(status.loaded);
+      page === 1 ? setImages(loaded) : setImages(prevImages => [...prevImages, ...loaded]);
+    };
+    const onError = msg => {
+      toast(`${text} not found`);
+      setPages(0);
+      setImages([]);
+      setView(status.idle);
+    };
+    if (text) {
+      setView(status.pending);
+      getImages(text, page, itemOnPage, onResponse, onError);
+    }
+  }, [text, page]);
+  return { images, pages, view };
+}
+
 const App = () => {
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
-  const [images, setImages] = useState([]);
-  const [page, setPage] = useState(0);
-  const [pages, setPages] = useState(0);
+  const [modal, setModal] = useState(false);
   const [offset, setOffset] = useState(0);
-  const [view, setView] = useState(status.idle);
+  const [page, setPage] = useState(0);
+  const data = useApi(text, page);
 
   const searchImages = query => {
     if (text !== query) {
-      setImages([]);
-      setText(query.toLowerCase());
-      loadMore(query.toLowerCase());
+      loadMore(query.toLowerCase(), 0);
     }
   };
 
-  const loadMore = query => {
-    const nextPage = pages > page ? page + 1 : 1;
+  const loadMore = (text, page) => {
+    const nextPage = page + 1;
     setPage(nextPage);
-    setView(status.pending);
-    getImages(query, nextPage, itemOnPage, onResponse, onError);
-    setOffset(window.scrollY);
-  };
-
-  const onResponse = (data, totalHits, totalPages) => {
-    if (page === 1 && totalHits) {
-      if (totalHits >= maximumHits) {
-        toast(`Found more than ${totalHits} images`);
-      } else {
-        toast(`Found ${totalHits} images`);
-      }
-    }
-    const loaded = data.map(({ id, largeImageURL, previewURL, tags }) => {
-      return { id, largeImageURL, previewURL, tags };
-    });
-
-    setImages([...images, ...loaded]);
-    setView(status.loaded);
-    setPages(totalPages);
+    setText(text);
+    nextPage === 1 ? setOffset(0) : setOffset(window.scrollY);
   };
 
   useEffect(() => {
-    if (view === status.loaded) {
+    if (data.view === status.loaded) {
       window.scrollTo({
         top: offset,
       });
     }
-  }, [offset, view]);
-
-  const onError = msg => {
-    toast(`${text} not found`);
-    setText('');
-    setView(status.idle);
-    setPage(1);
-    setPages(1);
-  };
+  }, [offset, data.view]);
 
   const openModal = id => {
-    const image = images.filter(image => {
+    const image = data.images.filter(image => {
       return image.id === id;
     })[0];
     setImage(image);
-    setView(status.modal);
-    setOffset(window.scrollY);
+    setModal(true);
   };
 
   const closeModal = () => {
-    setView(status.loaded);
+    setModal(false);
   };
 
   return (
     <div className="App">
       <Searchbar onSubmit={searchImages} />
-      {view === status.loaded && <ImageGallery images={images} openModal={openModal} />}
-      {pages > 1 && page < pages && <Button onClick={() => loadMore(text)}>Load more</Button>}
-      {view === status.pending && (
+      {data.view === status.loaded && <ImageGallery images={data.images} openModal={openModal} />}
+      {data.pages > 1 && page < data.pages && (
+        <Button onClick={() => loadMore(text, page)}>Load more</Button>
+      )}
+      {data.view === status.pending && (
         <Modal>
           <Loader />
         </Modal>
       )}
-      {view === status.modal && (
+      {modal && (
         <Modal toggleModal={closeModal} showCloseBtn={true}>
           <img className={s.ImageGalleryFullItemImage} src={image.largeImageURL} alt={image.tags} />
         </Modal>
