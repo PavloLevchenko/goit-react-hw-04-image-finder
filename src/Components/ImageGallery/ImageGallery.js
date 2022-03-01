@@ -10,7 +10,7 @@ const ImageGallery = ({ images, openModal }) => (
           key={id}
           previewURL={previewURL}
           tags={tags}
-          onClick={() => openModal(id)}
+          openModal={() => openModal(id)}
         />
       );
     })}

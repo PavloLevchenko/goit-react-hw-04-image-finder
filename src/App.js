@@ -29,19 +29,19 @@ const App = () => {
   const [offset, setOffset] = useState(0);
   const [view, setView] = useState(status.idle);
 
-  const changeSearchText = query => {
+  const searchImages = query => {
     if (text !== query) {
       setImages([]);
       setText(query.toLowerCase());
-      pendingMore();
+      loadMore(query.toLowerCase());
     }
   };
 
-  const pendingMore = () => {
+  const loadMore = query => {
     const nextPage = pages > page ? page + 1 : 1;
     setPage(nextPage);
     setView(status.pending);
-    getImages(text, page, itemOnPage, onResponse, onError);
+    getImages(query, nextPage, itemOnPage, onResponse, onError);
     setOffset(window.scrollY);
   };
 
@@ -63,10 +63,13 @@ const App = () => {
   };
 
   useEffect(() => {
-    window.scrollTo({
-      top: offset,
-    });
-  }, [offset]);
+    if (view === status.loaded) {
+      console.log(offset);
+      window.scrollTo({
+        top: offset,
+      });
+    }
+  }, [offset, view]);
 
   const onError = msg => {
     toast(`${text} not found`);
@@ -91,9 +94,9 @@ const App = () => {
 
   return (
     <div className="App">
-      <Searchbar onSubmit={changeSearchText} />
+      <Searchbar onSubmit={searchImages} />
       {view === status.loaded && <ImageGallery images={images} openModal={openModal} />}
-      {pages > 1 && page < pages && <Button onClick={pendingMore}>pending more</Button>}
+      {pages > 1 && page < pages && <Button onClick={() => loadMore(text)}>Load more</Button>}
       {view === status.pending && (
         <Modal>
           <Loader />
